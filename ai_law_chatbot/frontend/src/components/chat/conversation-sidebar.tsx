@@ -285,20 +285,31 @@ export function ConversationSidebar({ className }: ConversationSidebarProps) {
   return (
     <>
       <aside
-        className={cn("bg-background hidden w-64 shrink-0 flex-col border-r md:flex", className)}
+        className={cn(
+          "bg-background hidden shrink-0 flex-col border-r md:flex transition-all duration-300 overflow-hidden",
+          isCollapsed ? "w-16" : "w-64",
+          className
+        )}
       >
-        <div className="flex h-12 items-center justify-between border-b px-4 py-3">
-          <h2 className="text-sm font-semibold">Conversations</h2>
+        <div className={cn("flex h-12 items-center border-b px-4 py-3", isCollapsed ? "justify-center" : "justify-between")}>
+          {!isCollapsed && <h2 className="text-sm font-semibold truncate">Conversations</h2>}
           <Button
             variant="ghost"
             size="sm"
-            className="h-8 w-8 p-0"
-            onClick={() => setIsCollapsed(true)}
+            className="h-8 w-8 p-0 hover:bg-secondary/80"
+            onClick={() => setIsCollapsed(!isCollapsed)}
           >
-            <ChevronLeft className="h-4 w-4" />
+            {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
           </Button>
         </div>
-        <ConversationList {...listProps} />
+        {!isCollapsed && <ConversationList {...listProps} />}
+        {isCollapsed && (
+          <div className="flex flex-col items-center py-4 gap-4">
+             <Button variant="ghost" size="icon" onClick={startNewChat} className="h-10 w-10 hover:bg-secondary/80 text-primary">
+               <MessageSquarePlus className="h-5 w-5" />
+             </Button>
+          </div>
+        )}
       </aside>
 
       <Sheet open={isOpen} onOpenChange={close}>
