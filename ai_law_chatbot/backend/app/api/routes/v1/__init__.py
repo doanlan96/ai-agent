@@ -12,7 +12,8 @@ from app.api.routes.v1 import conversations
 from app.api.routes.v1 import webhooks
 from app.api.routes.v1 import ws
 from app.api.routes.v1 import agent
-
+from app.api.routes.v1 import documents
+from app.api.routes.v1 import chat
 v1_router = APIRouter()
 
 # Health check routes (no auth required)
@@ -44,3 +45,5 @@ v1_router.include_router(ws.router, tags=["websocket"])
 
 # AI Agent routes
 v1_router.include_router(agent.router, tags=["agent"])
+v1_router.include_router(documents.router, tags=["document"])
+v1_router.include_router(chat.router, tags=["document"])
