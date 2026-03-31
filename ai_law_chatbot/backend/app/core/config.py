@@ -174,4 +174,3 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
-print("sdadasd")
