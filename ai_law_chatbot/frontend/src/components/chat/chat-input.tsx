@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui";
-import { Send, Loader2, Plus, Mic, Sparkles } from "lucide-react";
+import { Send, Loader2, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ChatInputProps {
@@ -13,12 +13,12 @@ interface ChatInputProps {
   onToggleDocumentMode?: (enabled: boolean) => void;
 }
 
-export function ChatInput({ 
-  onSend, 
-  disabled, 
+export function ChatInput({
+  onSend,
+  disabled,
   isProcessing,
   isDocumentMode = false,
-  onToggleDocumentMode 
+  onToggleDocumentMode,
 }: ChatInputProps) {
   const [message, setMessage] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -52,10 +52,10 @@ export function ChatInput({
   };
 
   return (
-    <div className="relative w-full max-w-3xl mx-auto">
-      <div 
+    <div className="relative mx-auto w-full max-w-3xl">
+      <div
         className={cn(
-          "relative flex items-end gap-2 bg-background/80 backdrop-blur-md rounded-[28px] border border-border/50 p-2 pl-4 shadow-2xl transition-all duration-200 focus-within:ring-1 focus-within:ring-primary/20 focus-within:border-primary/30",
+          "bg-background/80 border-border/50 focus-within:ring-primary/20 focus-within:border-primary/30 relative flex items-end gap-2 rounded-[28px] border p-2 pl-4 shadow-2xl backdrop-blur-md transition-all duration-200 focus-within:ring-1",
           disabled && "opacity-60 grayscale-[0.5]",
           isDocumentMode && "border-primary/40 bg-primary/5"
         )}
@@ -64,31 +64,33 @@ export function ChatInput({
           <Button
             type="button"
             variant="ghost"
-            size="icon"
+            size="sm"
             onClick={() => onToggleDocumentMode?.(!isDocumentMode)}
             className={cn(
-              "h-8 w-8 rounded-full transition-all",
-              isDocumentMode 
-                ? "bg-primary/20 text-primary hover:bg-primary/30" 
-                : "text-muted-foreground hover:bg-secondary"
+              "flex h-8 shrink-0 items-center gap-1.5 rounded-full border px-3 transition-all",
+              isDocumentMode
+                ? "bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 shadow-sm"
+                : "text-muted-foreground hover:bg-secondary border-transparent"
             )}
             title={isDocumentMode ? "Document Mode Enabled" : "Enable Document Mode"}
           >
-            <Sparkles className={cn("h-4 w-4", isDocumentMode && "fill-current")} />
-            <span className="sr-only">Toggle Document Mode</span>
+            <FileText className={cn("h-3.5 w-3.5", isDocumentMode && "fill-current")} />
+            <span className="text-[11px] font-medium whitespace-nowrap">Document Mode</span>
           </Button>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex-1 flex items-end">
+        <form onSubmit={handleSubmit} className="flex flex-1 items-end">
           <textarea
             ref={textareaRef}
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={isDocumentMode ? "Ask about your documents..." : "Reply to AI Assistant..."}
+            placeholder={
+              isDocumentMode ? "Ask about your documents..." : "Reply to AI Assistant..."
+            }
             disabled={disabled}
             rows={1}
-            className="w-full resize-none bg-transparent py-2 px-1 text-sm sm:text-base focus:outline-none disabled:cursor-not-allowed max-h-[200px] scrollbar-thin"
+            className="scrollbar-thin max-h-[200px] w-full resize-none bg-transparent px-1 py-2 text-sm focus:outline-none disabled:cursor-not-allowed sm:text-base"
           />
         </form>
 
@@ -99,19 +101,24 @@ export function ChatInput({
             disabled={disabled || !message.trim()}
             className={cn(
               "h-9 w-9 rounded-full transition-transform active:scale-95",
-              message.trim() ? "bg-primary text-primary-foreground shadow-sm" : "bg-transparent text-muted-foreground hover:bg-secondary"
+              message.trim()
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "text-muted-foreground hover:bg-secondary bg-transparent"
             )}
           >
-            {isProcessing ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
+            {isProcessing ? (
+              <Loader2 className="h-5 w-5 animate-spin" />
+            ) : (
+              <Send className="h-5 w-5" />
+            )}
             <span className="sr-only">Send</span>
           </Button>
         </div>
       </div>
-      <p className="mt-2 text-center text-[10px] text-muted-foreground/60 w-full px-2">
-        {isDocumentMode 
+      <p className="text-muted-foreground/60 mt-2 w-full px-2 text-center text-[10px]">
+        {isDocumentMode
           ? "Document Mode is active. Responses will be grounded in your documents."
-          : "AI Assistant can make mistakes. Please check important legal information."
-        }
+          : "AI Assistant can make mistakes. Please check important legal information."}
       </p>
     </div>
   );
