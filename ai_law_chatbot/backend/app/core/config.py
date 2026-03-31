@@ -157,6 +157,10 @@ class Settings(BaseSettings):
     CORS_ALLOW_METHODS: list[str] = ["*"]
     CORS_ALLOW_HEADERS: list[str] = ["*"]
 
+    POSTGRES_URL: str = "postgresql+psycopg2://postgres:postgres@db:5432/ai_law_chatbot"
+    API_KEY_GOOGLE: str = ""
+    MODELS_EMBEDDING: str = ""
+
     @field_validator("CORS_ORIGINS")
     @classmethod
     def validate_cors_origins(cls, v: list[str], info: ValidationInfo) -> list[str]:
@@ -170,3 +174,4 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+print("sdadasd")
