@@ -9,9 +9,17 @@ interface ChatInputProps {
   onSend: (message: string) => void;
   disabled?: boolean;
   isProcessing?: boolean;
+  isDocumentMode?: boolean;
+  onToggleDocumentMode?: (enabled: boolean) => void;
 }
 
-export function ChatInput({ onSend, disabled, isProcessing }: ChatInputProps) {
+export function ChatInput({ 
+  onSend, 
+  disabled, 
+  isProcessing,
+  isDocumentMode = false,
+  onToggleDocumentMode 
+}: ChatInputProps) {
   const [message, setMessage] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -48,16 +56,36 @@ export function ChatInput({ onSend, disabled, isProcessing }: ChatInputProps) {
       <div 
         className={cn(
           "relative flex items-end gap-2 bg-background/80 backdrop-blur-md rounded-[28px] border border-border/50 p-2 pl-4 shadow-2xl transition-all duration-200 focus-within:ring-1 focus-within:ring-primary/20 focus-within:border-primary/30",
-          disabled && "opacity-60 grayscale-[0.5]"
+          disabled && "opacity-60 grayscale-[0.5]",
+          isDocumentMode && "border-primary/40 bg-primary/5"
         )}
       >
+        <div className="flex items-center self-center pb-1">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={() => onToggleDocumentMode?.(!isDocumentMode)}
+            className={cn(
+              "h-8 w-8 rounded-full transition-all",
+              isDocumentMode 
+                ? "bg-primary/20 text-primary hover:bg-primary/30" 
+                : "text-muted-foreground hover:bg-secondary"
+            )}
+            title={isDocumentMode ? "Document Mode Enabled" : "Enable Document Mode"}
+          >
+            <Sparkles className={cn("h-4 w-4", isDocumentMode && "fill-current")} />
+            <span className="sr-only">Toggle Document Mode</span>
+          </Button>
+        </div>
+
         <form onSubmit={handleSubmit} className="flex-1 flex items-end">
           <textarea
             ref={textareaRef}
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Reply to AI Assistant..."
+            placeholder={isDocumentMode ? "Ask about your documents..." : "Reply to AI Assistant..."}
             disabled={disabled}
             rows={1}
             className="w-full resize-none bg-transparent py-2 px-1 text-sm sm:text-base focus:outline-none disabled:cursor-not-allowed max-h-[200px] scrollbar-thin"
@@ -80,7 +108,10 @@ export function ChatInput({ onSend, disabled, isProcessing }: ChatInputProps) {
         </div>
       </div>
       <p className="mt-2 text-center text-[10px] text-muted-foreground/60 w-full px-2">
-        AI Assistant can make mistakes. Please check important legal information.
+        {isDocumentMode 
+          ? "Document Mode is active. Responses will be grounded in your documents."
+          : "AI Assistant can make mistakes. Please check important legal information."
+        }
       </p>
     </div>
   );

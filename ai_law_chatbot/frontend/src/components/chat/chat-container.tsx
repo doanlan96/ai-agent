@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useState } from "react";
 import { useChat, useLocalChat } from "@/hooks";
 import { cn } from "@/lib/utils";
 import { MessageList } from "./message-list";
@@ -170,7 +170,7 @@ interface ChatUIProps {
   messages: import("@/types").ChatMessage[];
   isConnected: boolean;
   isProcessing: boolean;
-  sendMessage: (content: string) => void;
+  sendMessage: (content: string, options?: { botTypes?: string }) => void;
   clearMessages: () => void;
   messagesEndRef: React.RefObject<HTMLDivElement | null>;
   // Human-in-the-Loop support
@@ -188,6 +188,8 @@ function ChatUI({
   pendingApproval,
   onResumeDecisions,
 }: ChatUIProps) {
+  const [isDocumentMode, setIsDocumentMode] = useState(false);
+
   return (
     <div className="relative flex h-full w-full flex-col bg-background">
       {/* Messages Area */}
@@ -233,9 +235,11 @@ function ChatUI({
       <div className="absolute bottom-0 left-0 w-full p-4 sm:p-6 z-30 pointer-events-none">
         <div className="pointer-events-auto bg-gradient-to-t from-background via-background/80 to-transparent pb-2 sm:pb-4 pt-8">
           <ChatInput
-            onSend={sendMessage}
+            onSend={(content) => sendMessage(content, { botTypes: isDocumentMode ? "document" : undefined })}
             disabled={!isConnected || isProcessing || !!pendingApproval}
             isProcessing={isProcessing}
+            isDocumentMode={isDocumentMode}
+            onToggleDocumentMode={setIsDocumentMode}
           />
           
           <div className="mt-4 flex items-center justify-center gap-4">

@@ -330,7 +330,7 @@ export function useChat(options: UseChatOptions = {}) {
   });
 
   const sendChatMessage = useCallback(
-    (content: string) => {
+    (content: string, options: { botTypes?: string } = {}) => {
       // Add user message
       const userMessage: ChatMessage = {
         id: nanoid(),
@@ -345,6 +345,7 @@ export function useChat(options: UseChatOptions = {}) {
       sendMessage({
         message: content,
         conversation_id: conversationId || null,
+        bot_types: options.botTypes,
       });
     },
     [addMessage, sendMessage, conversationId]
