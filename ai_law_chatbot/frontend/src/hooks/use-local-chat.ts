@@ -305,7 +305,7 @@ export function useLocalChat() {
   });
 
   const sendChatMessage = useCallback(
-    (content: string) => {
+    (content: string, options: { botTypes?: string } = {}) => {
       let convId = currentConversationId;
       if (!convId) {
         convId = createConversation();
@@ -320,7 +320,10 @@ export function useLocalChat() {
       addMessage(userMessage);
 
       setIsProcessing(true);
-      sendMessage({ message: content });
+      sendMessage({
+        message: content,
+        bot_types: options.botTypes,
+      });
     },
     [addMessage, sendMessage, currentConversationId, createConversation]
   );

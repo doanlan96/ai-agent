@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useState } from "react";
 import { useChat, useLocalChat } from "@/hooks";
+import { cn } from "@/lib/utils";
 import { MessageList } from "./message-list";
 import { ChatInput } from "./chat-input";
 import { ToolApprovalDialog } from "./tool-approval-dialog";
@@ -169,7 +170,7 @@ interface ChatUIProps {
   messages: import("@/types").ChatMessage[];
   isConnected: boolean;
   isProcessing: boolean;
-  sendMessage: (content: string) => void;
+  sendMessage: (content: string, options?: { botTypes?: string }) => void;
   clearMessages: () => void;
   messagesEndRef: React.RefObject<HTMLDivElement | null>;
   // Human-in-the-Loop support
@@ -187,28 +188,40 @@ function ChatUI({
   pendingApproval,
   onResumeDecisions,
 }: ChatUIProps) {
+  const [isDocumentMode, setIsDocumentMode] = useState(false);
+
   return (
-    <div className="mx-auto flex h-full w-full max-w-4xl flex-col">
-      <div className="scrollbar-thin flex-1 overflow-y-auto px-2 py-4 sm:px-4 sm:py-6">
-        {messages.length === 0 ? (
-          <div className="text-muted-foreground flex h-full flex-col items-center justify-center gap-4">
-            <div className="bg-secondary flex h-14 w-14 items-center justify-center rounded-full sm:h-16 sm:w-16">
-              <Bot className="h-7 w-7 sm:h-8 sm:w-8" />
+    <div className="relative flex h-full w-full flex-col bg-background">
+      {/* Messages Area */}
+      <div className="scrollbar-thin flex-1 overflow-y-auto overflow-x-hidden">
+        <div className="mx-auto flex w-full max-w-3xl flex-col px-4 py-8 sm:px-6 sm:py-12">
+          {messages.length === 0 ? (
+            <div className="flex h-[60vh] flex-col items-center justify-center gap-6 text-center animate-in fade-in slide-in-from-bottom-4 duration-700">
+              <div className="relative">
+                <div className="absolute -inset-4 rounded-full bg-primary/5 blur-2xl animate-pulse" />
+                <div className="bg-secondary/50 flex h-20 w-20 items-center justify-center rounded-3xl border border-border/50 shadow-sm backdrop-blur-sm sm:h-24 sm:w-24">
+                  <Bot className="h-10 w-10 text-primary sm:h-12 sm:w-12" />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <h2 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
+                  Legal AI Assistant
+                </h2>
+                <p className="text-muted-foreground text-sm sm:text-base max-w-[280px] sm:max-w-md mx-auto leading-relaxed">
+                  How can I help you with bank regulations or legal documents today?
+                </p>
+              </div>
             </div>
-            <div className="px-4 text-center">
-              <p className="text-foreground text-base font-medium sm:text-lg">AI Assistant</p>
-              <p className="text-sm">Start a conversation to get help</p>
-            </div>
-          </div>
-        ) : (
-          <MessageList messages={messages} />
-        )}
-        <div ref={messagesEndRef} />
+          ) : (
+            <MessageList messages={messages} />
+          )}
+          <div ref={messagesEndRef} className="h-32" /> {/* Extra space for floating input */}
+        </div>
       </div>
 
       {/* Human-in-the-Loop: Tool Approval Dialog */}
       {pendingApproval && onResumeDecisions && (
-        <div className="px-2 pb-2 sm:px-4 sm:pb-2">
+        <div className="absolute bottom-32 left-1/2 w-full max-w-2xl -translate-x-1/2 px-4 z-40">
           <ToolApprovalDialog
             actionRequests={pendingApproval.actionRequests}
             reviewConfigs={pendingApproval.reviewConfigs}
@@ -218,28 +231,35 @@ function ChatUI({
         </div>
       )}
 
-      <div className="px-2 pb-2 sm:px-4 sm:pb-4">
-        <div className="bg-card rounded-xl border p-3 shadow-sm sm:p-4">
+      {/* Floating Input Area */}
+      <div className="absolute bottom-0 left-0 w-full p-4 sm:p-6 z-30 pointer-events-none">
+        <div className="pointer-events-auto bg-gradient-to-t from-background via-background/80 to-transparent pb-2 sm:pb-4 pt-8">
           <ChatInput
-            onSend={sendMessage}
+            onSend={(content) => sendMessage(content, { botTypes: isDocumentMode ? "document" : undefined })}
             disabled={!isConnected || isProcessing || !!pendingApproval}
             isProcessing={isProcessing}
+            isDocumentMode={isDocumentMode}
+            onToggleDocumentMode={setIsDocumentMode}
           />
-          <div className="mt-3 flex items-center justify-between border-t pt-3">
-            <div className="flex items-center gap-2">
-              {isConnected ? (
-                <Wifi className="h-3.5 w-3.5 text-green-500" />
-              ) : (
-                <WifiOff className="h-3.5 w-3.5 text-red-500" />
-              )}
-              <span className="text-muted-foreground text-xs">
-                {isConnected ? "Connected" : "Disconnected"}
+          
+          <div className="mt-4 flex items-center justify-center gap-4">
+            <div className="flex items-center gap-1.5 opacity-60">
+              <div className={cn(
+                "h-1.5 w-1.5 rounded-full animate-pulse",
+                isConnected ? "bg-green-500" : "bg-red-500"
+              )} />
+              <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+                {isConnected ? "System Ready" : "Offline"}
               </span>
             </div>
-            <Button variant="ghost" size="sm" onClick={clearMessages} className="h-8 px-3 text-xs">
-              <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
-              Reset
-            </Button>
+            
+            <button 
+              onClick={clearMessages}
+              className="group flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <RotateCcw className="h-3 w-3 group-hover:rotate-[-45deg] transition-transform" />
+              Reset Thread
+            </button>
           </div>
         </div>
       </div>

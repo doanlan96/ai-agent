@@ -4,16 +4,16 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { ROUTES } from "@/lib/constants";
-import { LayoutDashboard, MessageSquare } from "lucide-react";
+import { LayoutDashboard, MessageSquare, ChevronLeft, ChevronRight, Menu } from "lucide-react";
 import { useSidebarStore } from "@/stores";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose } from "@/components/ui";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose, Button } from "@/components/ui";
 
 const navigation = [
   { name: "Dashboard", href: ROUTES.DASHBOARD, icon: LayoutDashboard },
   { name: "Chat", href: ROUTES.CHAT, icon: MessageSquare },
 ];
 
-function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
+function NavLinks({ onNavigate, isCollapsed }: { onNavigate?: () => void; isCollapsed?: boolean }) {
   const pathname = usePathname();
 
   return (
@@ -25,16 +25,18 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
             key={item.name}
             href={item.href}
             onClick={onNavigate}
+            title={isCollapsed ? item.name : undefined}
             className={cn(
-              "flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-colors",
+              "flex items-center rounded-lg px-3 py-3 text-sm font-medium transition-all duration-200",
               "min-h-[44px]",
+              isCollapsed ? "justify-center px-0" : "gap-3",
               isActive
                 ? "bg-secondary text-secondary-foreground"
                 : "text-muted-foreground hover:bg-secondary/50 hover:text-secondary-foreground"
             )}
           >
-            <item.icon className="h-5 w-5" />
-            {item.name}
+            <item.icon className={cn("h-5 w-5 shrink-0", isActive && "text-primary")} />
+            {!isCollapsed && <span className="truncate">{item.name}</span>}
           </Link>
         );
       })}
@@ -42,37 +44,50 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
   );
 }
 
-function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
+function SidebarContent({ onNavigate, isCollapsed, onToggleCollapse }: { onNavigate?: () => void; isCollapsed?: boolean; onToggleCollapse?: () => void }) {
   return (
     <div className="flex h-full flex-col">
-      <div className="flex h-14 items-center border-b px-4">
+      <div className={cn("flex h-14 items-center border-b px-4 transition-all duration-300", isCollapsed ? "justify-center" : "justify-between")}>
         <Link
           href={ROUTES.HOME}
-          className="flex items-center gap-2 font-semibold"
+          className="flex items-center gap-2 font-semibold overflow-hidden"
           onClick={onNavigate}
         >
-          <span>{"ai_law_chatbot"}</span>
+          {!isCollapsed && <span className="truncate">{"ai_law_chatbot"}</span>}
+          {isCollapsed && <span className="text-primary font-bold text-lg">AL</span>}
         </Link>
+        {!onNavigate && (
+             <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={onToggleCollapse} 
+                className="h-8 w-8 hover:bg-secondary/80 shrink-0"
+              >
+               {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+             </Button>
+        )}
       </div>
-      <NavLinks onNavigate={onNavigate} />
+      <NavLinks onNavigate={onNavigate} isCollapsed={isCollapsed} />
     </div>
   );
 }
 
 export function Sidebar() {
-  const { isOpen, close } = useSidebarStore();
+  const { isOpen, isCollapsed, close, toggleCollapse } = useSidebarStore();
 
   return (
     <>
-      <aside className="bg-background hidden w-64 shrink-0 border-r md:block">
-        <SidebarContent />
+      <aside className={cn(
+        "bg-background hidden shrink-0 border-r md:block transition-all duration-300",
+        isCollapsed ? "w-16" : "w-64"
+      )}>
+        <SidebarContent isCollapsed={isCollapsed} onToggleCollapse={toggleCollapse} />
       </aside>
 
       <Sheet open={isOpen} onOpenChange={close}>
         <SheetContent side="left" className="w-72 p-0">
-          <SheetHeader className="h-14 px-4">
-            <SheetTitle>{"ai_law_chatbot"}</SheetTitle>
-            <SheetClose onClick={close} />
+          <SheetHeader className="h-14 px-4 border-b flex flex-row items-center justify-between space-y-0">
+            <SheetTitle className="text-left font-semibold">{"ai_law_chatbot"}</SheetTitle>
           </SheetHeader>
           <NavLinks onNavigate={close} />
         </SheetContent>

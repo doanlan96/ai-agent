@@ -5,7 +5,7 @@ import type { ChatMessage } from "@/types";
 import { ToolCallCard } from "./tool-call-card";
 import { MarkdownContent } from "./markdown-content";
 import { CopyButton } from "./copy-button";
-import { User, Bot } from "lucide-react";
+import { User } from "lucide-react";
 
 interface MessageItemProps {
   message: ChatMessage;
@@ -14,82 +14,62 @@ interface MessageItemProps {
 
 export function MessageItem({ message, groupPosition }: MessageItemProps) {
   const isUser = message.role === "user";
-  const isGrouped = groupPosition && groupPosition !== "single";
 
   return (
     <div
       className={cn(
-        "group relative flex gap-2 overflow-visible sm:gap-4",
-        isGrouped ? "py-2 sm:py-3" : "py-3 sm:py-4",
-        isUser && "flex-row-reverse"
+        "group relative flex w-full flex-col gap-2 py-4 sm:py-6",
+        isUser ? "items-end" : "items-start"
       )}
     >
-      {/* Timeline connector line for grouped messages */}
-      {isGrouped && !isUser && (
-        <div
-          className="absolute left-[15px] w-0.5 bg-orange-500/40 sm:left-[17px]"
-          style={
-            groupPosition === "first"
-              ? { top: "24px", bottom: "0" }
-              : groupPosition === "last"
-                ? { top: "0", height: "24px" }
-                : { top: "0", bottom: "0" }
-          }
-        />
-      )}
-
       <div
         className={cn(
-          "z-10 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full sm:h-9 sm:w-9",
-          isUser ? "bg-primary text-primary-foreground" : "bg-orange-500/10 text-orange-500",
-          isGrouped && !isUser && "ring-background ring-2"
+          "relative flex max-w-[90%] flex-col gap-2 sm:max-w-[85%]",
+          isUser ? "items-end" : "items-start"
         )}
       >
-        {isUser ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4 sm:h-5 sm:w-5" />}
-      </div>
+        {isUser ? (
+          <div className="flex gap-3 items-end">
+            <div className="bg-secondary/80 text-secondary-foreground rounded-2xl px-4 py-2.5 text-sm shadow-sm ring-1 ring-border/50">
+              <p className="break-words whitespace-pre-wrap">{message.content}</p>
+            </div>
+            <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary mb-1">
+              <User className="h-4 w-4" />
+            </div>
+          </div>
+        ) : (
+          <div className="w-full space-y-4">
+            {/* AI Message Content - No Bubble, Premium Typography */}
+            <div className="prose-sm sm:prose-base max-w-none text-foreground/90 leading-relaxed">
+              <MarkdownContent content={message.content} />
+              {message.isStreaming && (
+                <span className="ml-1 inline-block h-4 w-1 animate-pulse rounded-full bg-primary/40" />
+              )}
+            </div>
 
-      <div
-        className={cn(
-          "max-w-[88%] flex-1 space-y-2 overflow-hidden sm:max-w-[85%]",
-          isUser && "flex flex-col items-end"
-        )}
-      >
-        {/* Only show message bubble if there's content or if it's streaming without tool calls */}
-        {(message.content ||
-          (message.isStreaming && (!message.toolCalls || message.toolCalls.length === 0))) && (
-          <div
-            className={cn(
-              "relative rounded-2xl px-3 py-2 sm:px-4 sm:py-2.5",
-              isUser ? "bg-primary text-primary-foreground rounded-tr-sm" : "bg-muted rounded-tl-sm"
-            )}
-          >
-            {isUser ? (
-              <p className="text-sm break-words whitespace-pre-wrap">{message.content}</p>
-            ) : (
-              <div className="prose-sm max-w-none text-sm">
-                <MarkdownContent content={message.content} />
-                {message.isStreaming && (
-                  <span className="ml-1 inline-block h-4 w-1.5 animate-pulse rounded-full bg-current" />
-                )}
-              </div>
-            )}
-
-            {!isUser && message.content && !message.isStreaming && (
-              <div className="absolute -top-1 -right-1 sm:opacity-0 sm:group-hover:opacity-100">
+            {/* Action Bar (Copy, etc.) - Visible on Hover */}
+            {!message.isStreaming && message.content && (
+              <div className="flex items-center gap-2 opacity-0 transition-opacity group-hover:opacity-100">
                 <CopyButton
                   text={message.content}
-                  className="bg-background/80 hover:bg-background shadow-sm"
+                  className="h-8 w-8 bg-background/50 hover:bg-background border shadow-sm"
                 />
               </div>
             )}
-          </div>
-        )}
 
-        {message.toolCalls && message.toolCalls.length > 0 && (
-          <div className="w-full space-y-2">
-            {message.toolCalls.map((toolCall) => (
-              <ToolCallCard key={toolCall.id} toolCall={toolCall} />
-            ))}
+            {/* Tool Calls */}
+            {message.toolCalls && message.toolCalls.length > 0 && (
+              <div className="w-full space-y-3 pt-2">
+                <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground mb-1">
+                  <span className="h-px flex-1 bg-border/50" />
+                  <span>Processing Information</span>
+                  <span className="h-px flex-1 bg-border/50" />
+                </div>
+                {message.toolCalls.map((toolCall) => (
+                  <ToolCallCard key={toolCall.id} toolCall={toolCall} />
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>
