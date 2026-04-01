@@ -396,16 +396,19 @@ async def agent_websocket(
 
                     query_embedding = embedding_service.embed_text(user_message)
                     contexts = search_similar_chunks(db_session_local, query_embedding, top_k=5)
-                    answer = await generate_rag_answer(user_message, contexts)
-
-                    sources = [
-                        {
-                            "title": c["title"],
-                            "page_number": c["page_number"],
-                            "content": c["content"][:300],
-                        }
-                        for c in contexts
-                    ]
+                    if not contexts:
+                        answer = "I'm sorry, I couldn't find any relevant information for your question"
+                        sources = []
+                    else:
+                        answer = await generate_rag_answer(user_message, contexts)
+                        sources = [
+                            {
+                                "title": c["title"],
+                                "page_number": c["page_number"],
+                                "content": c["content"][:300],
+                            }
+                            for c in contexts
+                        ]
 
                     # Nếu muốn giả lập streaming text đơn giản
                     await manager.send_event(
