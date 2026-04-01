@@ -38,7 +38,7 @@ services:
       - "prometheus.path=/metrics"
 
   db:
-    image: postgres:16-alpine
+    image: pgvector/pgvector:pg16
     container_name: ai_law_chatbot_db
     environment:
       - POSTGRES_USER=${POSTGRES_USER:-postgres}

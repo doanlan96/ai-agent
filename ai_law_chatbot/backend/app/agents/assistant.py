@@ -22,6 +22,7 @@ from pydantic_ai.settings import ModelSettings
 from app.agents.prompts import DEFAULT_SYSTEM_PROMPT
 from app.agents.tools import get_current_datetime
 from app.core.config import settings
+from app.agents.instructions import instructions
 
 logger = logging.getLogger(__name__)
 
@@ -46,13 +47,16 @@ class AssistantAgent:
 
     def __init__(
         self,
+        bot_types: str = "default",
         model_name: str | None = None,
         temperature: float | None = None,
         system_prompt: str | None = None,
     ):
+        self.bot_types = bot_types
         self.model_name = model_name or settings.AI_MODEL
         self.temperature = temperature or settings.AI_TEMPERATURE
         self.system_prompt = system_prompt or DEFAULT_SYSTEM_PROMPT
+        self.instructions = instructions
         self._agent: Agent[Deps, str] | None = None
 
     def _create_agent(self) -> Agent[Deps, str]:
@@ -62,11 +66,16 @@ class AssistantAgent:
             provider=OpenRouterProvider(api_key=settings.OPENROUTER_API_KEY),
         )
 
-        agent = Agent[Deps, str](
-            model=model,
-            model_settings=ModelSettings(temperature=self.temperature),
-            system_prompt=self.system_prompt,
-        )
+        if self.bot_types == "document":
+            agent = Agent[Deps, str](
+                instructions = self.instructions,
+            )
+        else:
+            agent = Agent[Deps, str](
+                model=model,
+                model_settings=ModelSettings(temperature=self.temperature),
+                system_prompt=self.system_prompt,
+            )
 
         self._register_tools(agent)
 
@@ -169,13 +178,13 @@ class AssistantAgent:
                 yield event
 
 
-def get_agent() -> AssistantAgent:
+def get_agent(bot_types: str) -> AssistantAgent:
     """Factory function to create an AssistantAgent.
 
     Returns:
         Configured AssistantAgent instance.
     """
-    return AssistantAgent()
+    return AssistantAgent(bot_types=bot_types)
 
 
 async def run_agent(

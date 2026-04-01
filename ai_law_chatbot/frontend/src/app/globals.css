@@ -190,7 +190,7 @@
   }
 
   /* Dark theme code highlighting */
-  .dark .hljs,
+  .dark .hljs
   @media (prefers-color-scheme: dark) {
     :root:not(.light) .hljs {
       color: #e1e4e8;
